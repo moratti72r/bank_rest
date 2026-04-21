@@ -1,1 +1,1021 @@
 # Здесь будет OpenAPI описание всех доступных эндпоинтов и моделей данных.
+openapi: 3.0.1
+info:
+  title: Банковские карты API
+  description: REST API для управления банковскими картами и пользователями
+  version: "1.0"
+servers:
+  - url: http://localhost:8080
+    description: Локальный сервер
+
+components:
+  schemas:
+    CardRequestDto:
+      type: object
+      description: DTO для создания карты
+      properties:
+        cardNumber:
+          type: string
+          description: Номер карты
+          example: "4111111111111111"
+          pattern: ^\d{13,19}$
+        expiryDate:
+          type: string
+          format: date
+          description: Срок действия карты
+          example: "2025-12"
+        balance:
+          type: number
+          format: double
+          description: Баланс карты
+          example: 1000.00
+        userId:
+          type: string
+          description: ID пользователя
+          example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+      required:
+        - cardNumber
+        - expiryDate
+        - userId
+
+    CardResponseDto:
+      type: object
+      description: Информация о карте
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: ID карты
+          example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+        maskedCardNumber:
+          type: string
+          description: Номер карты с маской
+          example: "**** **** **** 1111"
+        expiryDate:
+          type: string
+          format: date
+          description: Срок действия карты
+          example: "2025-12"
+        status:
+          $ref: '#/components/schemas/CardStatus'
+        balance:
+          type: number
+          format: double
+          description: Баланс карты
+          example: 1000.00
+        owner:
+          $ref: '#/components/schemas/UserResponseDto'
+
+    CardStatus:
+      type: string
+      description: Типы статусов карты
+      enum:
+        - ACTIVE
+        - BLOCKED
+        - EXPIRED
+
+    UserRequestDto:
+      type: object
+      description: DTO для создания пользователя
+      properties:
+        firstName:
+          type: string
+          description: Имя
+          example: Иван
+          pattern: ^[а-яА-Яa-zA-Z]+$
+          maxLength: 50
+        lastName:
+          type: string
+          description: Фамилия
+          example: Иванов
+          pattern: ^[а-яА-Яa-zA-Z]+$
+          maxLength: 50
+        phoneNumber:
+          type: string
+          description: Номер телефона
+          example: "+79991234567"
+          pattern: ^((\+7)|(8))\d{10}$
+        email:
+          type: string
+          format: email
+          description: Email
+          example: user@example.com
+        password:
+          type: string
+          description: Пароль
+          example: Password123!
+          pattern: ^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$
+      required:
+        - firstName
+        - lastName
+        - phoneNumber
+        - email
+        - password
+
+    UserResponseDto:
+      type: object
+      description: Информация о пользователе
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: ID пользователя
+          example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+        username:
+          type: string
+          description: Полное имя
+          example: Иван Иванов
+        phoneNumber:
+          type: string
+          description: Номер телефона
+          example: "+79991234567"
+        email:
+          type: string
+          format: email
+          description: Email
+          example: user@example.com
+
+    UserUpdateRequestDto:
+      type: object
+      description: DTO для обновления пользователя
+      properties:
+        email:
+          type: string
+          format: email
+          description: Email
+          example: user@example.com
+        phoneNumber:
+          type: string
+          description: Номер телефона
+          example: "+79991234567"
+          pattern: ^((\+7)|(8))\d{10}$
+        oldPassword:
+          type: string
+          description: Старый пароль
+          example: Password123!
+          pattern: ^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$
+        newPassword:
+          type: string
+          description: Новый пароль
+          example: NewPass123!
+          pattern: ^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$
+      required:
+        - oldPassword
+
+    LoginRequest:
+      type: object
+      description: Запрос на аутентификацию
+      properties:
+        email:
+          type: string
+          format: email
+          description: Адрес электронной почты пользователя
+          example: user123@mail.ru
+        password:
+          type: string
+          description: Пароль
+          example: passwoRD123!
+      required:
+        - email
+        - password
+
+    JwtResponse:
+      type: object
+      description: Ответ с JWT токеном
+      properties:
+        token:
+          type: string
+          description: Токен доступа
+          example: eyJhbGciOiJIUzUxMiJ9.x...
+        email:
+          type: string
+          format: email
+          description: Адрес электронной почты владельца токена
+          example: user123@mail.ru
+        role:
+          type: string
+          description: Роль пользователя
+          example: USER
+
+    TransferRequest:
+      type: object
+      description: Информация о переводе
+      properties:
+        sourceCardId:
+          type: string
+          format: uuid
+          description: ID карты отправителя
+          example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+        targetCardId:
+          type: string
+          format: uuid
+          description: ID карты получателя
+          example: e58bc10b-47dd-3211-b678-1f02c3d48888
+        amount:
+          type: number
+          format: double
+          description: Сумма перевода
+          example: 300.00
+      required:
+        - sourceCardId
+        - targetCardId
+        - amount
+
+    ErrResponse:
+      type: object
+      description: Описание ошибки
+      properties:
+        error:
+          type: string
+          description: Тип ошибки
+          example: BAD_REQUEST
+        message:
+          type: string
+          description: Описание ошибки
+          example: Failed to convert value...
+        statusCode:
+          type: integer
+          description: Код ответа
+          example: 400
+        timestamp:
+          type: string
+          description: Время
+          example: "2023-12-20 14:06:24"
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []
+
+paths:
+  /api/auth/login:
+    post:
+      tags:
+        - Аутентификация
+      summary: Аутентификация пользователя
+      description: Возвращает JWT токен при успешном входе
+      operationId: authenticateUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JwtResponse'
+        '404':
+          description: NOT FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '500':
+          description: INTERNAL SERVER ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+
+  /api/auth/logout:
+    post:
+      tags:
+        - Аутентификация
+      summary: Выход из системы
+      description: Добавляет текущий JWT токен в чёрный список
+      operationId: logout
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '500':
+          description: INTERNAL SERVER ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+
+  /api/auth/signup:
+    post:
+      tags:
+        - Аутентификация
+      summary: Регистрация пользователя
+      description: Создаёт нового пользователя
+      operationId: registerUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequestDto'
+        required: true
+      responses:
+        '201':
+          description: CREATED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseDto'
+        '400':
+          description: BAD REQUEST
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '409':
+          description: CONFLICT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '500':
+          description: INTERNAL SERVER ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+
+  /api/cards:
+    get:
+      tags:
+        - Карты
+      summary: Получение списка всех карточек
+      description: Получает список всех карточек с пагинацией
+      operationId: getAllCards
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: pageNum
+          in: query
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          description: Номер страницы
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+          description: Размер страницы
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CardResponseDto'
+        '400':
+          description: BAD REQUEST
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '500':
+          description: INTERNAL SERVER ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+
+    post:
+      tags:
+        - Карты
+      summary: Создание карты
+      description: Создает новую карту
+      operationId: createCard
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CardRequestDto'
+        required: true
+      responses:
+        '201':
+          description: CREATED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardResponseDto'
+        '400':
+          description: BAD REQUEST
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '500':
+          description: INTERNAL SERVER ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+
+  /api/cards/param:
+    get:
+      tags:
+        - Карты
+      summary: Получение списка всех карточек с параметрами поиска
+      description: Получает список всех карточек с параметрами поиска и пагинацией
+      operationId: getAllCardsByParam
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/CardStatus'
+          description: Статус карты
+        - name: firstName
+          in: query
+          schema:
+            type: string
+          description: Имя владельца
+        - name: lastName
+          in: query
+          schema:
+            type: string
+          description: Фамилия владельца
+        - name: phoneNumber
+          in: query
+          schema:
+            type: string
+          description: Номер телефона владельца
+        - name: email
+          in: query
+          schema:
+            type: string
+            format: email
+          description: Email владельца
+        - name: pageNum
+          in: query
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          description: Номер страницы
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+          description: Размер страницы
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CardResponseDto'
+        '400':
+          description: BAD REQUEST
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '500':
+          description: INTERNAL SERVER ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+
+  /api/cards/blocklist:
+    get:
+      tags:
+        - Карты
+      summary: Получение списка всех карт ожидающие блокировки
+      description: Получает список всех карт ожидающие блокировки с пагинацией
+      operationId: getCardsWaitingBlock
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: pageNum
+          in: query
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          description: Номер страницы
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+          description: Размер страницы
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CardResponseDto'
+        '400':
+          description: BAD REQUEST
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '500':
+          description: INTERNAL SERVER ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+
+  /api/cards/{id}:
+    get:
+      tags:
+        - Карты
+      summary: Получение карты
+      description: Получить информацию о карте по идентификатору
+      operationId: getCard
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardResponseDto'
+        '404':
+          description: NOT FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '500':
+          description: INTERNAL SERVER ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+
+    delete:
+      tags:
+        - Карты
+      summary: Удаление карты
+      description: Удаляет карту по идентификатору
+      operationId: deleteCard
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: NO CONTENT
+        '404':
+          description: NOT FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '500':
+          description: INTERNAL SERVER ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+
+    patch:
+      tags:
+        - Карты
+      summary: Блокировка карты
+      description: Меняет статус карты на BLOCKED по идентификатору
+      operationId: blockCard
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: NOT FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '409':
+          description: CONFLICT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '500':
+          description: INTERNAL SERVER ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+
+  /api/cards/{id}/activate:
+    patch:
+      tags:
+        - Карты
+      summary: Активация карты
+      description: Меняет статус карты на ACTIVE по идентификатору
+      operationId: activateCard
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: NOT FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '409':
+          description: CONFLICT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '500':
+          description: INTERNAL SERVER ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+
+  /api/cards/{id}/balance:
+    get:
+      tags:
+        - Карты
+      summary: Просмотр баланса карты
+      description: Получить информацию о балансе по идентификатору
+      operationId: getBalance
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: number
+                format: double
+        '404':
+          description: NOT FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '500':
+          description: INTERNAL SERVER ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+
+  /api/cards/transfer:
+    patch:
+      tags:
+        - Карты
+      summary: Перевод с карты на карту
+      description: Перевести средства с одной карты на другую
+      operationId: transfer
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: NOT FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '409':
+          description: CONFLICT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '500':
+          description: INTERNAL SERVER ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+
+  /api/users/toAdmin/{id}:
+    patch:
+      tags:
+        - Пользователи
+      summary: Изменение роли на Администратора
+      description: Дать права администратора пользователю по идентификатору
+      operationId: userToAdmin
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: NOT FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '500':
+          description: INTERNAL SERVER ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+
+  /api/users/{id}:
+    delete:
+      tags:
+        - Пользователи
+      summary: Удаление пользователя
+      description: Удаляет пользователя по идентификатору
+      operationId: deleteCard
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: NO CONTENT
+        '404':
+          description: NOT FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '500':
+          description: INTERNAL SERVER ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+
+  /api/users/update:
+    patch:
+      tags:
+        - Пользователи
+      summary: Обновление пользователя
+      description: Обновляет пользователя
+      operationId: updateUserInfo
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequestDto'
+        required: true
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: NOT FOUND
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'
+        '500':
+          description: INTERNAL SERVER ERROR
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrResponse'

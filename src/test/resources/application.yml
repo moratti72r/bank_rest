@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: bank-cards-system
+
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/migration/liquibase-master.yml
+
+jasypt:
+  encryptor:
+    password: myStrongEncryptionPassword123!
+    algorithm: PBEWithMD5AndDES
+    key-obtention-iterations: 1000
+    salt-generator-classname: org.jasypt.salt.RandomSaltGenerator
+
+server:
+  port: 8080
+
+logging:
+  level:
+    org.springframework: INFO
+    com.example.bankcards: DEBUG
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+springdoc:
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json

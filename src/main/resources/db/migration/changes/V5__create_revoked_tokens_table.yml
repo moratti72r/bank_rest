@@ -1,0 +1,42 @@
+databaseChangeLog:
+  - changeSet:
+      id: V5__create_revoked_tokens_table
+      author: mar
+      changes:
+        - createTable:
+            tableName: revoked_tokens
+            columns:
+              - column:
+                  name: id
+                  type: UUID
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: token
+                  type: VARCHAR(256)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: revoked_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: expires_at
+                  type: TIMESTAMP
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_revoked_token_token
+            tableName: revoked_tokens
+            columns:
+              - column:
+                  name: token
+        - createIndex:
+            indexName: idx_revoked_token_expiry
+            tableName: revoked_tokens
+            columns:
+              - column:
+                  name: expires_at

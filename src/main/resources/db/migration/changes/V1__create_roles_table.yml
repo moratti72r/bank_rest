@@ -1,0 +1,27 @@
+databaseChangeLog:
+  - changeSet:
+      id: V1__create_roles_table
+      author: mar
+      changes:
+        - createTable:
+            tableName: roles
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+                    unique: true
+        - loadData:
+            file: db/migration/data/roles.csv
+            tableName: roles
+            separator: ','
+            quotchar: '"'
+            encoding: UTF-8
